@@ -98,7 +98,7 @@ const Window: React.FC<WindowProps> = ({ data, onClose, onMinimize, onMaximize, 
         minHeight: showChrome ? minHeight : undefined,
         ...(showChrome
           ? (isMaximized
-              ? { width: '100vw', height: 'calc(100vh - 2.25rem)' }
+              ? { width: '100vw', maxWidth: '100vw', height: 'calc(100dvh - 3rem)', maxHeight: 'calc(100dvh - 3rem)' }
               : { width, height })
           : {})
       }}
@@ -107,18 +107,18 @@ const Window: React.FC<WindowProps> = ({ data, onClose, onMinimize, onMaximize, 
       {showChrome && (
         <>
           <div
-            className={`flex items-center justify-between p-1 cursor-default select-none ${isDragging ? 'win95-title-bar' : 'win95-title-bar'}`}
+            className={`flex items-center justify-between gap-2 p-1 cursor-default select-none touch-none ${isDragging ? 'win95-title-bar' : 'win95-title-bar'}`}
             onMouseDown={handleMouseDown}
           >
-            <div className="flex items-center gap-1 overflow-hidden">
-              <span className="text-sm px-1 text-white truncate font-bold drop-shadow-[1px_1px_0_rgba(0,0,0,0.5)]">
+            <div className="flex min-w-0 items-center gap-1 overflow-hidden">
+              <span className="truncate px-1 text-xs font-bold text-white drop-shadow-[1px_1px_0_rgba(0,0,0,0.5)] sm:text-sm">
                 {data.title}
               </span>
             </div>
 
-            <div className="flex gap-[2px]">
+            <div className="flex shrink-0 gap-[2px]">
               <button
-                className="w-4 h-4 p-0 bg-[#c0c0c0] text-black text-[11px] font-bold leading-none flex items-center justify-center border border-black shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#808080] active:shadow-[inset_1px_1px_0_#808080,inset_-1px_-1px_0_#ffffff]"
+                className="flex h-5 w-5 items-center justify-center border border-black bg-[#c0c0c0] p-0 text-[11px] font-bold leading-none text-black shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#808080] active:shadow-[inset_1px_1px_0_#808080,inset_-1px_-1px_0_#ffffff] sm:h-4 sm:w-4"
                 onClick={(e) => {
                   e.stopPropagation();
                   onMinimize();
@@ -128,7 +128,7 @@ const Window: React.FC<WindowProps> = ({ data, onClose, onMinimize, onMaximize, 
                 <span className="relative top-[-2px]">_</span>
               </button>
               <button
-                className="w-4 h-4 p-0 bg-[#c0c0c0] text-black text-[10px] font-bold leading-none flex items-center justify-center border border-black shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#808080] active:shadow-[inset_1px_1px_0_#808080,inset_-1px_-1px_0_#ffffff]"
+                className="flex h-5 w-5 items-center justify-center border border-black bg-[#c0c0c0] p-0 text-[10px] font-bold leading-none text-black shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#808080] active:shadow-[inset_1px_1px_0_#808080,inset_-1px_-1px_0_#ffffff] sm:h-4 sm:w-4"
                 onClick={(e) => {
                   e.stopPropagation();
                   onMaximize();
@@ -138,7 +138,7 @@ const Window: React.FC<WindowProps> = ({ data, onClose, onMinimize, onMaximize, 
                 {isMaximized ? '❐' : '□'}
               </button>
               <button
-                className="w-4 h-4 p-0 bg-[#c0c0c0] text-black text-[10px] font-bold leading-none flex items-center justify-center border border-black shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#808080] active:shadow-[inset_1px_1px_0_#808080,inset_-1px_-1px_0_#ffffff]"
+                className="flex h-5 w-5 items-center justify-center border border-black bg-[#c0c0c0] p-0 text-[10px] font-bold leading-none text-black shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#808080] active:shadow-[inset_1px_1px_0_#808080,inset_-1px_-1px_0_#ffffff] sm:h-4 sm:w-4"
                 onClick={(e) => {
                   e.stopPropagation();
                   onClose();
@@ -151,7 +151,7 @@ const Window: React.FC<WindowProps> = ({ data, onClose, onMinimize, onMaximize, 
           </div>
 
           {showMenuBar && (
-            <div className="flex gap-4 px-2 py-1 text-[11px] border-b border-gray-400">
+            <div className="hidden gap-4 border-b border-gray-400 px-2 py-1 text-[11px] sm:flex">
               <span className="cursor-pointer hover:bg-blue-800 hover:text-white px-1">
                 <u>F</u>ile
               </span>
@@ -169,8 +169,8 @@ const Window: React.FC<WindowProps> = ({ data, onClose, onMinimize, onMaximize, 
         </>
       )}
 
-      <div className={showChrome ? 'relative flex-1 p-1 overflow-hidden' : 'relative overflow-visible'}>
-        <div className={showChrome ? 'h-full' : ''}>
+      <div className={showChrome ? 'relative flex-1 min-h-0 p-1 overflow-hidden' : 'relative overflow-visible'}>
+        <div className={showChrome ? 'h-full overflow-auto' : ''}>
           {data.content}
         </div>
       </div>

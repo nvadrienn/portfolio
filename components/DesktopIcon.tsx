@@ -10,16 +10,17 @@ interface DesktopIconProps {
 const DesktopIcon: React.FC<DesktopIconProps> = ({ icon, label, onDoubleClick }) => {
   return (
     <div 
-      className="flex flex-col items-center gap-1 w-20 group cursor-default"
+      className="group flex w-full max-w-[6rem] flex-col items-center gap-1 justify-self-center rounded px-2 py-1 text-center cursor-default sm:w-20"
       onDoubleClick={onDoubleClick}
       onTouchEnd={(e) => {
+        e.preventDefault();
         onDoubleClick();
       }}
     >
-      <div className="text-4xl p-1 group-hover:bg-blue-900 group-hover:bg-opacity-40 rounded flex items-center justify-center">
+      <div className="flex items-center justify-center rounded p-1 text-4xl group-hover:bg-blue-900 group-hover:bg-opacity-40">
         {icon}
       </div>
-      <span className="text-[11px] text-white text-center leading-tight px-1">
+      <span className="px-1 text-[11px] leading-tight text-white">
         {label}
       </span>
     </div>

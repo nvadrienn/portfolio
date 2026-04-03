@@ -21,26 +21,24 @@ const Taskbar: React.FC<TaskbarProps> = ({ windows, onAppClick }) => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-9 bg-[#c0c0c0] border-t-2 border-white flex items-center p-1 gap-2 z-[9999]">
-      {/* Start Button */}
+    <div className="fixed bottom-0 left-0 right-0 z-[9999] flex h-12 items-center gap-1 border-t-2 border-white bg-[#c0c0c0] p-1 sm:gap-2">
       <button
-        className={`win95-bevel flex items-center gap-1 px-2 py-0.5 font-bold text-sm h-full active:win95-bevel-inset ${showStart ? 'win95-bevel-inset' : ''}`}
+        className={`win95-bevel flex h-full shrink-0 items-center gap-1 px-2 py-0.5 font-bold text-sm active:win95-bevel-inset ${showStart ? 'win95-bevel-inset' : ''}`}
         onClick={() => setShowStart(!showStart)}
       >
-        <img src="/windowsstarticon.png" alt="Start" className="w-4 h-4 object-contain" draggable={false} />
-        <span>Start</span>
+        <img src="/windowsstarticon.png" alt="Start" className="h-4 w-4 object-contain" draggable={false} />
+        <span className="hidden sm:inline">Start</span>
       </button>
 
       {showStart && <StartMenu onClose={() => setShowStart(false)} />}
 
-      <div className="w-[1px] h-full bg-gray-500 mx-1"></div>
+      <div className="mx-1 hidden h-full w-[1px] bg-gray-500 sm:block"></div>
 
-      {/* Program Tabs */}
-      <div className="flex-1 flex gap-1 h-full overflow-hidden">
+      <div className="flex h-full flex-1 gap-1 overflow-x-auto overflow-y-hidden pr-1">
         {windows.filter((w) => w.isOpen).map((win) => (
           <button
             key={win.id}
-            className={`win95-bevel flex items-center gap-1 px-2 h-full text-xs min-w-[100px] max-w-[150px] truncate transition-none ${win.isMinimized ? 'opacity-70' : 'bg-[#dfdfdf] font-bold'}`}
+            className={`win95-bevel flex h-full min-w-[84px] shrink-0 items-center gap-1 px-2 text-xs transition-none sm:min-w-[100px] sm:max-w-[150px] ${win.isMinimized ? 'opacity-70' : 'bg-[#dfdfdf] font-bold'}`}
             onClick={() => onAppClick(win.id)}
           >
             <span>{win.icon}</span>
@@ -49,9 +47,8 @@ const Taskbar: React.FC<TaskbarProps> = ({ windows, onAppClick }) => {
         ))}
       </div>
 
-      {/* System Tray */}
-      <div className="win95-bevel-inset flex items-center gap-2 px-3 h-full bg-[#c0c0c0] text-xs">
-        <span className="text-lg">🔊</span>
+      <div className="win95-bevel-inset flex h-full shrink-0 items-center gap-1 bg-[#c0c0c0] px-2 text-xs sm:gap-2 sm:px-3">
+        <span className="text-[10px] font-bold sm:text-xs">SND</span>
         <span className="font-bold">{formatTime(time)}</span>
       </div>
     </div>

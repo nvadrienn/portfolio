@@ -18,12 +18,12 @@ const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
 
   return (
     <div 
-      className="fixed bottom-9 left-0 w-56 bg-[#c0c0c0] win95-bevel z-[10000] flex"
+      className="fixed bottom-12 left-1 right-1 z-[10000] flex max-w-[18rem] bg-[#c0c0c0] win95-bevel sm:left-0 sm:right-auto sm:w-56"
       onMouseLeave={onClose}
     >
       {/* Left Sidebar Branding */}
-      <div className="w-8 bg-gray-600 flex flex-col justify-end p-1">
-        <div className="rotate-[-90deg] origin-bottom-left text-white font-bold text-xl whitespace-nowrap mb-2 ml-1 opacity-50">
+      <div className="flex w-8 flex-col justify-end bg-gray-600 p-1">
+        <div className="mb-2 ml-1 origin-bottom-left rotate-[-90deg] whitespace-nowrap text-xl font-bold text-white opacity-50">
           Windows<span className="font-black">95</span>
         </div>
       </div>
@@ -33,11 +33,11 @@ const StartMenu: React.FC<StartMenuProps> = ({ onClose }) => {
         {items.map((item, i) => (
           <div 
             key={i} 
-            className={`flex items-center justify-between px-3 py-2 text-xs hover:bg-blue-800 hover:text-white cursor-default group transition-none ${i === items.length - 1 ? 'border-t border-gray-400 mt-1' : ''}`}
+            className={`group flex cursor-default items-center justify-between px-3 py-2 text-xs transition-none hover:bg-blue-800 hover:text-white ${i === items.length - 1 ? 'mt-1 border-t border-gray-400' : ''}`}
             onClick={onClose}
           >
             <div className="flex items-center gap-3">
-              <span className="text-xl">{item.icon}</span>
+              <span className="text-lg">{item.icon}</span>
               <span className="font-medium underline decoration-1 underline-offset-2">
                 {item.label[0]}
               </span>

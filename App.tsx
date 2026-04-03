@@ -12,6 +12,8 @@ const SolitaireIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4'
 );
 
 const RECYCLE_BIN_STORAGE_KEY = 'retroDesktop.recycleBinState';
+const TASKBAR_HEIGHT = 48;
+const MOBILE_BREAKPOINT = 768;
 
 const RecycleBinIcon: React.FC<{ isEmpty: boolean; className?: string; variant?: '32x32_4' | '16x16_4' }> = ({
   isEmpty,
@@ -23,6 +25,10 @@ const RecycleBinIcon: React.FC<{ isEmpty: boolean; className?: string; variant?:
 );
 
 const App: React.FC = () => {
+  const [viewport, setViewport] = useState(() => ({
+    width: typeof window === 'undefined' ? 1440 : window.innerWidth,
+    height: typeof window === 'undefined' ? 900 : window.innerHeight
+  }));
   const [isRecycleBinEmpty, setIsRecycleBinEmpty] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return window.localStorage.getItem(RECYCLE_BIN_STORAGE_KEY) === 'empty';
@@ -166,6 +172,47 @@ const App: React.FC = () => {
     }
   });
 
+  useEffect(() => {
+    const handleResize = () => {
+      setViewport({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isMobile = viewport.width < MOBILE_BREAKPOINT;
+  const desktopHeight = Math.max(320, viewport.height - TASKBAR_HEIGHT);
+
+  const clampWindowFrame = useCallback((windowState: WindowData, nextPosition = windowState.position, nextSize = windowState.size) => {
+    const minWidth = windowState.minSize?.width ?? 300;
+    const minHeight = windowState.minSize?.height ?? 220;
+    const desiredWidth = nextSize?.width ?? 520;
+    const desiredHeight = nextSize?.height ?? 420;
+
+    const maxWidth = Math.max(Math.min(viewport.width - 16, desiredWidth), Math.min(minWidth, viewport.width - 16));
+    const maxHeight = Math.max(Math.min(desktopHeight - 16, desiredHeight), Math.min(minHeight, desktopHeight - 16));
+    const safeWidth = Math.max(260, maxWidth);
+    const safeHeight = Math.max(180, maxHeight);
+    const maxX = Math.max(0, viewport.width - safeWidth);
+    const maxY = Math.max(0, desktopHeight - safeHeight);
+
+    return {
+      position: {
+        x: Math.min(Math.max(0, nextPosition.x), maxX),
+        y: Math.min(Math.max(0, nextPosition.y), maxY)
+      },
+      size: {
+        width: safeWidth,
+        height: safeHeight
+      }
+    };
+  }, [desktopHeight, viewport.height, viewport.width]);
+
   const bringToFront = useCallback((id: DesktopAppId) => {
     setWindows(prev => {
       const target = prev[id];
@@ -222,18 +269,28 @@ const App: React.FC = () => {
   }, []);
 
   const updatePosition = useCallback((id: DesktopAppId, x: number, y: number) => {
-    setWindows(prev => ({
-      ...prev,
-      [id]: { ...prev[id], position: { x, y } }
-    }));
-  }, []);
+    setWindows(prev => {
+      const target = prev[id];
+      if (!target) return prev;
+      const clamped = clampWindowFrame(target, { x, y }, target.size);
+      return {
+        ...prev,
+        [id]: { ...target, position: clamped.position }
+      };
+    });
+  }, [clampWindowFrame]);
 
   const updateSize = useCallback((id: DesktopAppId, width: number, height: number) => {
-    setWindows(prev => ({
-      ...prev,
-      [id]: { ...prev[id], size: { width, height } }
-    }));
-  }, []);
+    setWindows(prev => {
+      const target = prev[id];
+      if (!target) return prev;
+      const clamped = clampWindowFrame(target, target.position, { width, height });
+      return {
+        ...prev,
+        [id]: { ...target, position: clamped.position, size: clamped.size }
+      };
+    });
+  }, [clampWindowFrame]);
 
   const toggleMaximize = useCallback((id: DesktopAppId) => {
     setWindows(prev => {
@@ -277,13 +334,14 @@ const App: React.FC = () => {
 
   return (
     <div
-      className="relative w-screen h-screen overflow-hidden select-none bg-no-repeat bg-cover bg-center"
+      className="relative h-[100dvh] w-full overflow-hidden select-none bg-no-repeat bg-cover bg-center"
       style={{
         backgroundImage: 'url("https://upload.wikimedia.org/wikipedia/commons/2/21/Bliss_%28Windows_XP_wallpaper%29.jpg")',
         backgroundColor: '#008080'
       }}
     >
-      <div className="p-4 flex flex-col gap-6 w-max">
+      <div className="absolute inset-x-0 top-0 bottom-12 overflow-y-auto px-3 py-4 sm:bottom-12 sm:px-4">
+        <div className="grid grid-cols-2 gap-4 sm:flex sm:w-max sm:flex-col sm:gap-6">
         <DesktopIcon
           icon={<img src="/mycomputericon.png" alt="My Computer" className="w-12 h-12 object-contain" draggable={false} />}
           label="My Computer"
@@ -324,6 +382,7 @@ const App: React.FC = () => {
           label="Recycle Bin"
           onDoubleClick={() => openWindow('trash')}
         />
+        </div>
       </div>
 
       {(Object.values(windows) as WindowData[]).map((win) => {
@@ -346,11 +405,22 @@ const App: React.FC = () => {
 
         if (win.isMinimized) return null;
 
+        const clamped = clampWindowFrame(win);
+        const mobileWindow = isMobile && win.showChrome !== false;
+        const renderedWindow: WindowData = {
+          ...win,
+          position: mobileWindow ? { x: 0, y: 0 } : clamped.position,
+          size: mobileWindow
+            ? { width: viewport.width, height: desktopHeight }
+            : clamped.size,
+          isMaximized: mobileWindow ? true : win.isMaximized
+        };
+
         return (
           <Window
             key={win.id}
             data={{
-              ...win,
+              ...renderedWindow,
               content:
                 win.id === 'my-computer'
                   ? <MyComputerContent onOpenPaint={() => { openWindow('paint'); closeWindow('my-computer'); }} onOpenSolitaire={() => { openWindow('solitaire'); closeWindow('my-computer'); }} onOpenMinesweeper={() => { openWindow('minesweeper'); closeWindow('my-computer'); }} />
@@ -401,7 +471,7 @@ interface MyComputerContentProps {
 }
 
 const MyComputerContent: React.FC<MyComputerContentProps> = ({ onOpenPaint, onOpenSolitaire, onOpenMinesweeper }) => (
-  <div className="p-2 grid grid-cols-4 gap-4 bg-white h-full overflow-auto win95-bevel-inset content-start">
+  <div className="grid h-full grid-cols-2 content-start gap-4 overflow-auto bg-white p-2 win95-bevel-inset sm:grid-cols-4">
     {[
       { icon: <Diskcopy1 variant="32x32_4" className="w-10 h-10" />, label: '3� Floppy (A:)' },
       { icon: <Drvspace4 variant="32x32_4" className="w-10 h-10" />, label: 'Hard Drive (C:)' },
@@ -1260,10 +1330,10 @@ const RecycleBinContent: React.FC<RecycleBinContentProps> = ({ isEmpty, onEmptyB
         Empty Recycle Bin
       </button>
     </div>
-    <div className="grid grid-cols-[1.6fr_1fr_1fr] gap-x-2 px-1 py-1 border-b border-[#7f7f7f] font-bold">
+    <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-x-2 border-b border-[#7f7f7f] px-1 py-1 font-bold sm:grid-cols-[1.6fr_1fr_1fr]">
       <span>Name</span>
       <span>Type</span>
-      <span>Date Deleted</span>
+      <span className="hidden sm:block">Date Deleted</span>
     </div>
     <div className="overflow-auto flex-1">
       {isEmpty ? (
@@ -1272,10 +1342,10 @@ const RecycleBinContent: React.FC<RecycleBinContentProps> = ({ isEmpty, onEmptyB
         </div>
       ) : (
         recycleBinItems.map((file) => (
-          <div key={file.name} className="grid grid-cols-[1.6fr_1fr_1fr] gap-x-2 px-1 py-1 hover:bg-blue-100">
+          <div key={file.name} className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-x-2 px-1 py-1 hover:bg-blue-100 sm:grid-cols-[1.6fr_1fr_1fr]">
             <span className="truncate">{file.name}</span>
             <span>{file.type}</span>
-            <span>{file.date}</span>
+            <span className="hidden sm:block">{file.date}</span>
           </div>
         ))
       )}
@@ -1602,15 +1672,15 @@ const InternetExplorerContent: React.FC = () => {
 
       <div className="flex-1 bg-white win95-bevel-inset overflow-auto p-3 text-black">
         {!searched && (
-          <div className="h-full w-full flex flex-col items-center justify-center gap-4">
-            <div className="flex gap-2 text-[18px] underline self-start">
+          <div className="flex h-full w-full flex-col items-center justify-center gap-4">
+            <div className="flex flex-wrap gap-2 self-start text-[16px] underline sm:text-[18px]">
               <span className="cursor-pointer">Search</span>
               <span className="cursor-pointer">Images</span>
               <span className="cursor-pointer">News</span>
               <span className="cursor-pointer">Maps</span>
               <span className="cursor-pointer">More</span>
             </div>
-            <h1 className="font-serif text-7xl leading-none select-none">
+            <h1 className="select-none text-5xl leading-none font-serif sm:text-7xl">
               <span className="text-[#1a4dcc]">G</span>
               <span className="text-[#d63a2f]">o</span>
               <span className="text-[#e2b32f]">o</span>
@@ -1632,7 +1702,7 @@ const InternetExplorerContent: React.FC = () => {
                 className="w-full border border-black px-3 py-2 text-[16px] focus:outline-none"
                 placeholder="Search Google"
               />
-              <div className="flex gap-2">
+              <div className="flex flex-wrap justify-center gap-2">
                 <button type="submit" className="win95-bevel win95-button px-4 py-1 text-sm" disabled={isLoading}>
                   Google Search
                 </button>
