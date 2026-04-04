@@ -266,12 +266,14 @@ const MinesweeperContent: React.FC = () => {
   const [status, setStatus] = useState<GameStatus>('ready');
   const [revealedSafe, setRevealedSafe] = useState(0);
   const [clickCount, setClickCount] = useState(0);
+  const [isFlagMode, setIsFlagMode] = useState(false);
 
   const reset = () => {
     setBoard(makeEmptyBoard());
     setStatus('ready');
     setRevealedSafe(0);
     setClickCount(0);
+    setIsFlagMode(false);
   };
 
   const revealAllMines = (nextBoard: Cell[][]) => {
@@ -341,46 +343,67 @@ const MinesweeperContent: React.FC = () => {
             <div className="bg-black text-[#ff0000] font-mono font-bold text-[20px] leading-none px-2 py-1 min-w-[64px] text-center">
               000
             </div>
-            <button
-              type="button"
-              onClick={reset}
-              className="win95-bevel bg-[#c0c0c0] w-8 h-8 flex items-center justify-center active:win95-bevel-inset"
-              aria-label="Reset Minesweeper"
-              title="Reset"
-            >
-              <FaceIcon status={status} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsFlagMode((prev) => !prev)}
+                className={`win95-bevel min-w-[60px] px-2 py-1 text-[10px] font-bold active:win95-bevel-inset sm:hidden ${isFlagMode ? 'win95-bevel-inset bg-[#dcdcdc]' : 'bg-[#c0c0c0]'}`}
+                aria-pressed={isFlagMode}
+              >
+                {isFlagMode ? 'FLAG' : 'OPEN'}
+              </button>
+              <button
+                type="button"
+                onClick={reset}
+                className="win95-bevel bg-[#c0c0c0] w-8 h-8 flex items-center justify-center active:win95-bevel-inset"
+                aria-label="Reset Minesweeper"
+                title="Reset"
+              >
+                <FaceIcon status={status} />
+              </button>
+            </div>
             <div className="bg-black text-[#ff0000] font-mono font-bold text-[20px] leading-none px-2 py-1 min-w-[64px] text-center">
               {digital(clickCount)}
             </div>
           </div>
 
-          <div
-            className="win95-bevel-inset p-1 grid gap-0 bg-[#c0c0c0] w-max"
-            style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }}
-          >
-            {board.map((row, rowIndex) =>
-              row.map((cell, colIndex) => (
-                <button
-                  key={`${rowIndex}-${colIndex}`}
-                  type="button"
-                  onClick={() => handleReveal(rowIndex, colIndex)}
-                  onContextMenu={(e) => handleFlag(e, rowIndex, colIndex)}
-                  className={`w-5 h-5 flex items-center justify-center leading-none ${
-                    cell.isRevealed
-                      ? 'bg-[#c0c0c0] border border-[#808080]'
-                      : 'bg-[#c0c0c0] win95-bevel active:win95-bevel-inset'
-                  }`}
-                  aria-label={`Cell ${rowIndex + 1}, ${colIndex + 1}`}
-                >
-                  {cell.isFlagged && <PixelGlyph map={flagGlyph} pixelSize={1.8} />}
-                  {cell.isRevealed && cell.isMine && <PixelGlyph map={mineGlyph} pixelSize={1.8} />}
-                  {cell.isRevealed && !cell.isMine && cell.adjacentMines > 0 && (
-                    <NumberGlyph value={cell.adjacentMines} />
-                  )}
-                </button>
-              ))
-            )}
+          <div className="min-h-0 flex-1 overflow-auto">
+            <div
+              className="win95-bevel-inset p-1 grid gap-0 bg-[#c0c0c0] w-max"
+              style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }}
+            >
+              {board.map((row, rowIndex) =>
+                row.map((cell, colIndex) => (
+                  <button
+                    key={`${rowIndex}-${colIndex}`}
+                    type="button"
+                    onClick={(e) => {
+                      if (isFlagMode) {
+                        handleFlag(e, rowIndex, colIndex);
+                        return;
+                      }
+                      handleReveal(rowIndex, colIndex);
+                    }}
+                    onContextMenu={(e) => handleFlag(e, rowIndex, colIndex)}
+                    className={`w-6 h-6 sm:w-5 sm:h-5 flex items-center justify-center leading-none touch-manipulation ${
+                      cell.isRevealed
+                        ? 'bg-[#c0c0c0] border border-[#808080]'
+                        : 'bg-[#c0c0c0] win95-bevel active:win95-bevel-inset'
+                    }`}
+                    aria-label={`Cell ${rowIndex + 1}, ${colIndex + 1}`}
+                  >
+                    {cell.isFlagged && <PixelGlyph map={flagGlyph} pixelSize={1.8} />}
+                    {cell.isRevealed && cell.isMine && <PixelGlyph map={mineGlyph} pixelSize={1.8} />}
+                    {cell.isRevealed && !cell.isMine && cell.adjacentMines > 0 && (
+                      <NumberGlyph value={cell.adjacentMines} />
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+          <div className="px-1 text-[10px] sm:hidden">
+            Tap cells to open. Use `FLAG` mode to place or remove flags.
           </div>
         </div>
       </div>

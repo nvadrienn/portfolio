@@ -37,7 +37,7 @@ const Window: React.FC<WindowProps> = ({ data, onClose, onMinimize, onMaximize, 
     setIsDragging(true);
     setOffset({
       x: e.clientX - data.position.x,
-      y: e.clientY - data.position.y,
+      y: e.clientY - data.position.y
     });
   };
 
@@ -94,8 +94,8 @@ const Window: React.FC<WindowProps> = ({ data, onClose, onMinimize, onMaximize, 
         left: isMaximized ? 0 : data.position.x,
         top: isMaximized ? 0 : data.position.y,
         zIndex: data.zIndex,
-        minWidth: showChrome ? minWidth : undefined,
-        minHeight: showChrome ? minHeight : undefined,
+        minWidth: showChrome && !isMaximized ? minWidth : undefined,
+        minHeight: showChrome && !isMaximized ? minHeight : undefined,
         ...(showChrome
           ? (isMaximized
               ? { width: '100vw', maxWidth: '100vw', height: 'calc(100dvh - 3rem)', maxHeight: 'calc(100dvh - 3rem)' }
@@ -107,18 +107,21 @@ const Window: React.FC<WindowProps> = ({ data, onClose, onMinimize, onMaximize, 
       {showChrome && (
         <>
           <div
-            className={`flex items-center justify-between gap-2 p-1 cursor-default select-none touch-none ${isDragging ? 'win95-title-bar' : 'win95-title-bar'}`}
+            className="win95-title-bar flex items-center justify-between gap-1 p-1 cursor-default select-none touch-none"
             onMouseDown={handleMouseDown}
           >
-            <div className="flex min-w-0 items-center gap-1 overflow-hidden">
-              <span className="truncate px-1 text-xs font-bold text-white drop-shadow-[1px_1px_0_rgba(0,0,0,0.5)] sm:text-sm">
+            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden pr-1">
+              <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                {data.icon}
+              </span>
+              <span className="truncate px-0.5 text-[10px] font-bold text-white drop-shadow-[1px_1px_0_rgba(0,0,0,0.5)] sm:px-1 sm:text-sm">
                 {data.title}
               </span>
             </div>
 
             <div className="flex shrink-0 gap-[2px]">
               <button
-                className="flex h-5 w-5 items-center justify-center border border-black bg-[#c0c0c0] p-0 text-[11px] font-bold leading-none text-black shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#808080] active:shadow-[inset_1px_1px_0_#808080,inset_-1px_-1px_0_#ffffff] sm:h-4 sm:w-4"
+                className="flex h-6 w-6 items-center justify-center border border-black bg-[#c0c0c0] p-0 text-[12px] font-bold leading-none text-black shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#808080] active:shadow-[inset_1px_1px_0_#808080,inset_-1px_-1px_0_#ffffff] sm:h-4 sm:w-4 sm:text-[11px]"
                 onClick={(e) => {
                   e.stopPropagation();
                   onMinimize();
@@ -128,17 +131,24 @@ const Window: React.FC<WindowProps> = ({ data, onClose, onMinimize, onMaximize, 
                 <span className="relative top-[-2px]">_</span>
               </button>
               <button
-                className="flex h-5 w-5 items-center justify-center border border-black bg-[#c0c0c0] p-0 text-[10px] font-bold leading-none text-black shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#808080] active:shadow-[inset_1px_1px_0_#808080,inset_-1px_-1px_0_#ffffff] sm:h-4 sm:w-4"
+                className="flex h-6 w-6 items-center justify-center border border-black bg-[#c0c0c0] p-0 text-black shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#808080] active:shadow-[inset_1px_1px_0_#808080,inset_-1px_-1px_0_#ffffff] sm:h-4 sm:w-4"
                 onClick={(e) => {
                   e.stopPropagation();
                   onMaximize();
                 }}
                 aria-label={isMaximized ? 'Restore' : 'Maximize'}
               >
-                {isMaximized ? '❐' : '□'}
+                {isMaximized ? (
+                  <span className="relative block h-[11px] w-[11px] sm:h-[9px] sm:w-[9px]">
+                    <span className="absolute left-0 top-[3px] h-[7px] w-[7px] border border-black bg-[#c0c0c0] sm:top-[2px] sm:h-[6px] sm:w-[6px]" />
+                    <span className="absolute right-0 top-0 h-[7px] w-[7px] border border-black bg-[#c0c0c0] sm:h-[6px] sm:w-[6px]" />
+                  </span>
+                ) : (
+                  <span className="block h-[10px] w-[10px] border border-black bg-[#c0c0c0] sm:h-[8px] sm:w-[8px]" />
+                )}
               </button>
               <button
-                className="flex h-5 w-5 items-center justify-center border border-black bg-[#c0c0c0] p-0 text-[10px] font-bold leading-none text-black shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#808080] active:shadow-[inset_1px_1px_0_#808080,inset_-1px_-1px_0_#ffffff] sm:h-4 sm:w-4"
+                className="flex h-6 w-6 items-center justify-center border border-black bg-[#c0c0c0] p-0 text-[11px] font-bold leading-none text-black shadow-[inset_1px_1px_0_#ffffff,inset_-1px_-1px_0_#808080] active:shadow-[inset_1px_1px_0_#808080,inset_-1px_-1px_0_#ffffff] sm:h-4 sm:w-4 sm:text-[10px]"
                 onClick={(e) => {
                   e.stopPropagation();
                   onClose();

@@ -5,10 +5,10 @@ import DesktopIcon from './components/DesktopIcon';
 import WebampPlayer from './components/WebampPlayer';
 import MinesweeperContent from './components/MinesweeperContent';
 import { WindowData, DesktopAppId } from './types';
-import { Diskcopy1, Drvspace4, CdMusic, Controls3000, Brush, Freecell1, Shell3232, Shell3233, Winmine1, Mapi32IconAttach } from '@react95/icons';
+import { Diskcopy1, Drvspace4, CdMusic, Controls3000, Brush, Sol1, Shell3232, Shell3233, Winmine1, Mapi32IconAttach, BatExec, Wangimg128, Regedit204 } from '@react95/icons';
 
 const SolitaireIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
-  <Freecell1 variant="32x32_4" className={className} />
+  <Sol1 variant="32x32_4" className={className} />
 );
 
 const RECYCLE_BIN_STORAGE_KEY = 'retroDesktop.recycleBinState';
@@ -24,11 +24,23 @@ const RecycleBinIcon: React.FC<{ isEmpty: boolean; className?: string; variant?:
   : <Shell3233 variant={variant} className={className} />
 );
 
+const ImageViewerContent: React.FC<{ title: string; src: string }> = ({ title, src }) => (
+  <div className="flex h-full items-center justify-center bg-[#808080] p-3">
+    <img
+      src={src}
+      alt={title}
+      className="max-h-full max-w-full object-contain win95-bevel bg-white p-1"
+      draggable={false}
+    />
+  </div>
+);
+
 const App: React.FC = () => {
   const [viewport, setViewport] = useState(() => ({
     width: typeof window === 'undefined' ? 1440 : window.innerWidth,
     height: typeof window === 'undefined' ? 900 : window.innerHeight
   }));
+  const [activeImage, setActiveImage] = useState<{ title: string; src: string } | null>(null);
   const [isRecycleBinEmpty, setIsRecycleBinEmpty] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return window.localStorage.getItem(RECYCLE_BIN_STORAGE_KEY) === 'empty';
@@ -45,7 +57,7 @@ const App: React.FC = () => {
       position: { x: 50, y: 50 },
       size: { width: 600, height: 420 },
       icon: <img src="/mycomputericon.png" alt="My Computer" className="w-4 h-4 object-contain" draggable={false} />,
-      content: <MyComputerContent onOpenPaint={() => {}} onOpenSolitaire={() => {}} onOpenMinesweeper={() => {}} />
+      content: <MyComputerContent onOpenPaint={() => {}} onOpenSolitaire={() => {}} onOpenMinesweeper={() => {}} onOpenTetris={() => {}} />
     },
     'about': {
       id: 'about',
@@ -68,8 +80,22 @@ const App: React.FC = () => {
       zIndex: 1,
       position: { x: 150, y: 80 },
       size: { width: 560, height: 420 },
-      icon: <img src="/foldericon.png" alt="Projects" className="w-4 h-4 object-contain" draggable={false} />,
-      content: <ProjectsContent />
+      icon: <Regedit204 variant="16x16_4" className="w-4 h-4" />,
+      content: <div />
+    },
+    'image-viewer': {
+      id: 'image-viewer',
+      title: 'Image Viewer',
+      isOpen: false,
+      isMinimized: false,
+      isMaximized: false,
+      zIndex: 1,
+      position: { x: 240, y: 70 },
+      size: { width: 760, height: 560 },
+      minSize: { width: 360, height: 280 },
+      icon: <Wangimg128 variant="16x16_4" className="w-4 h-4" />,
+      content: <div />,
+      showMenuBar: false
     },
     'certificates': {
       id: 'certificates',
@@ -80,7 +106,7 @@ const App: React.FC = () => {
       zIndex: 1,
       position: { x: 180, y: 100 },
       size: { width: 600, height: 420 },
-      icon: <img src="/foldericon.png" alt="Certificates" className="w-4 h-4 object-contain" draggable={false} />,
+      icon: <Regedit204 variant="16x16_4" className="w-4 h-4" />,
       content: <CertificatesContent />
     },
     'contact': {
@@ -128,7 +154,7 @@ const App: React.FC = () => {
       zIndex: 1,
       position: { x: 260, y: 90 },
       size: { width: 760, height: 520 },
-      icon: <Brush variant="32x32_4" className="w-4 h-4" />,
+      icon: <img src="/0385f37b8854938a29ec3865012c0266-Photoroom.png" alt="Paint" className="w-4 h-4 object-contain" draggable={false} />,
       content: <PaintContent />
     },
     'solitaire': {
@@ -157,6 +183,20 @@ const App: React.FC = () => {
       icon: <Winmine1 variant="16x16_4" className="w-4 h-4" />,
       showMenuBar: false,
       content: <MinesweeperContent />
+    },
+    'tetris': {
+      id: 'tetris',
+      title: 'TETRIS for Windows',
+      isOpen: false,
+      isMinimized: false,
+      isMaximized: false,
+      zIndex: 1,
+      position: { x: 120, y: 40 },
+      size: { width: 940, height: 710 },
+      minSize: { width: 860, height: 650 },
+      icon: <img src="/tetrris.png" alt="Tetris" className="w-4 h-4 object-contain" draggable={false} />,
+      showMenuBar: false,
+      content: <TetrisContent />
     },
     'winamp': {
       id: 'winamp',
@@ -314,6 +354,25 @@ const App: React.FC = () => {
     closeWindow('winamp');
   }, [closeWindow]);
 
+  const openImageViewer = useCallback((title: string, src: string) => {
+    setActiveImage({ title, src });
+    setWindows(prev => {
+      const target = prev['image-viewer'];
+      const nextZ = Math.max(...Object.values(prev).map((win) => win.zIndex), 1) + 1;
+
+      return {
+        ...prev,
+        'image-viewer': {
+          ...target,
+          title,
+          isOpen: true,
+          isMinimized: false,
+          zIndex: nextZ
+        }
+      };
+    });
+  }, []);
+
   const handleWinampMinimize = useCallback(() => {
     setWindows(prev => ({
       ...prev,
@@ -423,7 +482,11 @@ const App: React.FC = () => {
               ...renderedWindow,
               content:
                 win.id === 'my-computer'
-                  ? <MyComputerContent onOpenPaint={() => { openWindow('paint'); closeWindow('my-computer'); }} onOpenSolitaire={() => { openWindow('solitaire'); closeWindow('my-computer'); }} onOpenMinesweeper={() => { openWindow('minesweeper'); closeWindow('my-computer'); }} />
+                  ? <MyComputerContent onOpenPaint={() => { openWindow('paint'); closeWindow('my-computer'); }} onOpenSolitaire={() => { openWindow('solitaire'); closeWindow('my-computer'); }} onOpenMinesweeper={() => { openWindow('minesweeper'); closeWindow('my-computer'); }} onOpenTetris={() => { openWindow('tetris'); closeWindow('my-computer'); }} />
+                  : win.id === 'projects'
+                    ? <ProjectsContent onOpenImage={openImageViewer} />
+                    : win.id === 'image-viewer' && activeImage
+                      ? <ImageViewerContent title={activeImage.title} src={activeImage.src} />
                   : win.id === 'trash'
                     ? <RecycleBinContent isEmpty={isRecycleBinEmpty} onEmptyBin={() => setIsRecycleBinEmpty(true)} />
                   : win.content
@@ -468,9 +531,10 @@ interface MyComputerContentProps {
   onOpenPaint: () => void;
   onOpenSolitaire: () => void;
   onOpenMinesweeper: () => void;
+  onOpenTetris: () => void;
 }
 
-const MyComputerContent: React.FC<MyComputerContentProps> = ({ onOpenPaint, onOpenSolitaire, onOpenMinesweeper }) => (
+const MyComputerContent: React.FC<MyComputerContentProps> = ({ onOpenPaint, onOpenSolitaire, onOpenMinesweeper, onOpenTetris }) => (
   <div className="grid h-full grid-cols-2 content-start gap-4 overflow-auto bg-white p-2 win95-bevel-inset sm:grid-cols-4">
     {[
       { icon: <Diskcopy1 variant="32x32_4" className="w-10 h-10" />, label: '3� Floppy (A:)' },
@@ -520,6 +584,18 @@ const MyComputerContent: React.FC<MyComputerContentProps> = ({ onOpenPaint, onOp
       <Winmine1 variant="32x32_4" className="w-12 h-12" />
       <span className="text-[11px] text-center">Minesweeper</span>
     </button>
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpenTetris();
+      }}
+      onMouseDown={(e) => e.stopPropagation()}
+      className="flex flex-col items-center gap-1 cursor-pointer hover:bg-blue-100 p-2 text-left"
+    >
+      <img src="/tetrris.png" alt="Tetris" className="w-12 h-12 object-contain" draggable={false} />
+      <span className="text-[11px] text-center">Tetris</span>
+    </button>
   </div>
 );
 
@@ -541,6 +617,544 @@ const paintTools: PaintTool[] = [
   { id: 'picker', label: '\uD83D\uDC89' },
   { id: 'clear', label: '\uD83D\uDDD1\uFE0F' }
 ];
+
+type TetrisPieceType = 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L';
+type TetrisCell = TetrisPieceType | 'locked';
+
+interface ActiveTetrisPiece {
+  type: TetrisPieceType;
+  rotation: number;
+  x: number;
+  y: number;
+}
+
+interface TetrisState {
+  board: (TetrisCell | null)[][];
+  current: ActiveTetrisPiece;
+  next: TetrisPieceType;
+  score: number;
+  level: number;
+  lines: number;
+  isGameOver: boolean;
+  isPaused: boolean;
+}
+
+const TETRIS_ROWS = 20;
+const TETRIS_COLS = 10;
+const TETRIS_CELL_SIZE = 27;
+const TETRIS_DROP_BASE = 700;
+
+const tetrisShapes: Record<TetrisPieceType, number[][][]> = {
+  I: [
+    [[0, 1], [1, 1], [2, 1], [3, 1]],
+    [[2, 0], [2, 1], [2, 2], [2, 3]],
+    [[0, 2], [1, 2], [2, 2], [3, 2]],
+    [[1, 0], [1, 1], [1, 2], [1, 3]]
+  ],
+  O: [
+    [[1, 0], [2, 0], [1, 1], [2, 1]],
+    [[1, 0], [2, 0], [1, 1], [2, 1]],
+    [[1, 0], [2, 0], [1, 1], [2, 1]],
+    [[1, 0], [2, 0], [1, 1], [2, 1]]
+  ],
+  T: [
+    [[1, 0], [0, 1], [1, 1], [2, 1]],
+    [[1, 0], [1, 1], [2, 1], [1, 2]],
+    [[0, 1], [1, 1], [2, 1], [1, 2]],
+    [[1, 0], [0, 1], [1, 1], [1, 2]]
+  ],
+  S: [
+    [[1, 0], [2, 0], [0, 1], [1, 1]],
+    [[1, 0], [1, 1], [2, 1], [2, 2]],
+    [[1, 1], [2, 1], [0, 2], [1, 2]],
+    [[0, 0], [0, 1], [1, 1], [1, 2]]
+  ],
+  Z: [
+    [[0, 0], [1, 0], [1, 1], [2, 1]],
+    [[2, 0], [1, 1], [2, 1], [1, 2]],
+    [[0, 1], [1, 1], [1, 2], [2, 2]],
+    [[1, 0], [0, 1], [1, 1], [0, 2]]
+  ],
+  J: [
+    [[0, 0], [0, 1], [1, 1], [2, 1]],
+    [[1, 0], [2, 0], [1, 1], [1, 2]],
+    [[0, 1], [1, 1], [2, 1], [2, 2]],
+    [[1, 0], [1, 1], [0, 2], [1, 2]]
+  ],
+  L: [
+    [[2, 0], [0, 1], [1, 1], [2, 1]],
+    [[1, 0], [1, 1], [1, 2], [2, 2]],
+    [[0, 1], [1, 1], [2, 1], [0, 2]],
+    [[0, 0], [1, 0], [1, 1], [1, 2]]
+  ]
+};
+
+const tetrisColors: Record<TetrisCell, { top: string; left: string; right: string; bottom: string; fill: string }> = {
+  I: { top: '#e6ff66', left: '#f7ff9f', right: '#9ea600', bottom: '#6f7600', fill: '#e5e821' },
+  O: { top: '#9efcff', left: '#cbffff', right: '#3c9ba3', bottom: '#1d6a72', fill: '#7de2e8' },
+  T: { top: '#ff6eff', left: '#ffa5ff', right: '#8b158d', bottom: '#630565', fill: '#d92ee7' },
+  S: { top: '#ff6e41', left: '#ff9a7a', right: '#a52b04', bottom: '#751b00', fill: '#e53b10' },
+  Z: { top: '#4f39ff', left: '#7a68ff', right: '#1800b5', bottom: '#0a0071', fill: '#2900ef' },
+  J: { top: '#b4ff53', left: '#d1ff8c', right: '#4d9e00', bottom: '#2e6900', fill: '#6bd90b' },
+  L: { top: '#cfcfcf', left: '#eeeeee', right: '#777777', bottom: '#494949', fill: '#9d9d9d' },
+  locked: { top: '#cfcfcf', left: '#eeeeee', right: '#777777', bottom: '#494949', fill: '#9d9d9d' }
+};
+
+const createEmptyTetrisBoard = () =>
+  Array.from({ length: TETRIS_ROWS }, () => Array.from({ length: TETRIS_COLS }, () => null as TetrisCell | null));
+
+const randomTetrisPiece = (): TetrisPieceType => {
+  const pieces: TetrisPieceType[] = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+  return pieces[Math.floor(Math.random() * pieces.length)];
+};
+
+const createTetrisPiece = (type: TetrisPieceType): ActiveTetrisPiece => ({
+  type,
+  rotation: 0,
+  x: 3,
+  y: 0
+});
+
+const getTetrisCells = (piece: ActiveTetrisPiece) =>
+  tetrisShapes[piece.type][piece.rotation].map(([x, y]) => ({ x: piece.x + x, y: piece.y + y }));
+
+const isValidTetrisPosition = (board: (TetrisCell | null)[][], piece: ActiveTetrisPiece) =>
+  getTetrisCells(piece).every(({ x, y }) => x >= 0 && x < TETRIS_COLS && y < TETRIS_ROWS && (y < 0 || board[y][x] === null));
+
+const rotateTetrisPiece = (piece: ActiveTetrisPiece): ActiveTetrisPiece => ({
+  ...piece,
+  rotation: (piece.rotation + 1) % 4
+});
+
+const mergeTetrisPiece = (board: (TetrisCell | null)[][], piece: ActiveTetrisPiece) => {
+  const next = board.map((row) => [...row]);
+  getTetrisCells(piece).forEach(({ x, y }) => {
+    if (y >= 0 && y < TETRIS_ROWS && x >= 0 && x < TETRIS_COLS) {
+      next[y][x] = piece.type;
+    }
+  });
+  return next;
+};
+
+const clearTetrisLines = (board: (TetrisCell | null)[][]) => {
+  const remaining = board.filter((row) => row.some((cell) => cell === null));
+  const cleared = TETRIS_ROWS - remaining.length;
+  const filled = Array.from({ length: cleared }, () => Array.from({ length: TETRIS_COLS }, () => null as TetrisCell | null));
+  return {
+    board: [...filled, ...remaining],
+    cleared
+  };
+};
+
+const tetrisScoreByLines = [0, 40, 100, 300, 1200];
+
+const createInitialTetrisState = (): TetrisState => {
+  const currentType = randomTetrisPiece();
+  return {
+    board: createEmptyTetrisBoard(),
+    current: createTetrisPiece(currentType),
+    next: randomTetrisPiece(),
+    score: 0,
+    level: 1,
+    lines: 0,
+    isGameOver: false,
+    isPaused: false
+  };
+};
+
+const TetrisBlock: React.FC<{ cell: TetrisCell }> = ({ cell }) => {
+  const colors = tetrisColors[cell];
+
+  return (
+    <div
+      className="h-full w-full"
+      style={{
+        backgroundColor: colors.fill,
+        borderTop: `3px solid ${colors.top}`,
+        borderLeft: `3px solid ${colors.left}`,
+        borderRight: `3px solid ${colors.right}`,
+        borderBottom: `3px solid ${colors.bottom}`,
+        boxSizing: 'border-box'
+      }}
+    />
+  );
+};
+
+const TetrisContent: React.FC = () => {
+  const [game, setGame] = useState<TetrisState>(() => createInitialTetrisState());
+  const [isGameMenuOpen, setIsGameMenuOpen] = useState(false);
+  const [isCompactLayout, setIsCompactLayout] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth < 768
+  );
+
+  const restartGame = useCallback(() => {
+    setGame(createInitialTetrisState());
+    setIsGameMenuOpen(false);
+  }, []);
+
+  const togglePause = useCallback(() => {
+    setGame((prev) => {
+      if (prev.isGameOver) return prev;
+      return { ...prev, isPaused: !prev.isPaused };
+    });
+    setIsGameMenuOpen(false);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => setIsCompactLayout(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const lockCurrentPiece = useCallback((state: TetrisState): TetrisState => {
+    const mergedBoard = mergeTetrisPiece(state.board, state.current);
+    const { board: clearedBoard, cleared } = clearTetrisLines(mergedBoard);
+    const nextCurrent = createTetrisPiece(state.next);
+    const nextState: TetrisState = {
+      ...state,
+      board: clearedBoard,
+      current: nextCurrent,
+      next: randomTetrisPiece(),
+      lines: state.lines + cleared,
+      score: state.score + (tetrisScoreByLines[cleared] ?? 0) * state.level,
+      level: Math.min(15, 1 + Math.floor((state.lines + cleared) / 10))
+    };
+
+    if (!isValidTetrisPosition(nextState.board, nextCurrent)) {
+      return {
+        ...nextState,
+        isGameOver: true
+      };
+    }
+
+    return nextState;
+  }, []);
+
+  const movePiece = useCallback((dx: number, dy: number) => {
+    setGame((prev) => {
+      if (prev.isGameOver || prev.isPaused) return prev;
+      const candidate = { ...prev.current, x: prev.current.x + dx, y: prev.current.y + dy };
+
+      if (isValidTetrisPosition(prev.board, candidate)) {
+        return { ...prev, current: candidate };
+      }
+
+      if (dy > 0) {
+        return lockCurrentPiece(prev);
+      }
+
+      return prev;
+    });
+  }, [lockCurrentPiece]);
+
+  const rotatePiece = useCallback(() => {
+    setGame((prev) => {
+      if (prev.isGameOver || prev.isPaused) return prev;
+      const rotated = rotateTetrisPiece(prev.current);
+      const kicks = [0, -1, 1, -2, 2];
+
+      for (const kick of kicks) {
+        const candidate = { ...rotated, x: rotated.x + kick };
+        if (isValidTetrisPosition(prev.board, candidate)) {
+          return { ...prev, current: candidate };
+        }
+      }
+
+      return prev;
+    });
+  }, []);
+
+  const hardDrop = useCallback(() => {
+    setGame((prev) => {
+      if (prev.isGameOver || prev.isPaused) return prev;
+      let candidate = { ...prev.current };
+
+      while (isValidTetrisPosition(prev.board, { ...candidate, y: candidate.y + 1 })) {
+        candidate = { ...candidate, y: candidate.y + 1 };
+      }
+
+      return lockCurrentPiece({ ...prev, current: candidate, score: prev.score + 2 });
+    });
+  }, [lockCurrentPiece]);
+
+  useEffect(() => {
+    if (game.isGameOver || game.isPaused) return undefined;
+
+    const dropDelay = Math.max(120, TETRIS_DROP_BASE - (game.level - 1) * 45);
+    const timer = window.setInterval(() => {
+      movePiece(0, 1);
+    }, dropDelay);
+
+    return () => window.clearInterval(timer);
+  }, [game.isGameOver, game.isPaused, game.level, movePiece]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (game.isGameOver) {
+        if (event.key === 'Enter') restartGame();
+        return;
+      }
+
+      if (event.key === 'p' || event.key === 'P') {
+        event.preventDefault();
+        setGame((prev) => {
+          if (prev.isGameOver) return prev;
+          return { ...prev, isPaused: !prev.isPaused };
+        });
+        return;
+      }
+
+      switch (event.key) {
+        case 'ArrowLeft':
+          event.preventDefault();
+          movePiece(-1, 0);
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          movePiece(1, 0);
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          movePiece(0, 1);
+          break;
+        case 'ArrowUp':
+        case 'x':
+        case 'X':
+          event.preventDefault();
+          rotatePiece();
+          break;
+        case ' ':
+          event.preventDefault();
+          hardDrop();
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [game.isGameOver, hardDrop, movePiece, restartGame, rotatePiece]);
+
+  const boardWithPiece = React.useMemo(() => {
+    const nextBoard = game.board.map((row) => [...row]);
+    getTetrisCells(game.current).forEach(({ x, y }) => {
+      if (y >= 0 && y < TETRIS_ROWS && x >= 0 && x < TETRIS_COLS) {
+        nextBoard[y][x] = game.current.type;
+      }
+    });
+    return nextBoard;
+  }, [game.board, game.current]);
+
+  const nextShape = tetrisShapes[game.next][0];
+  const cellSize = isCompactLayout ? 18 : TETRIS_CELL_SIZE;
+
+  return (
+    <div
+      className="flex h-full flex-col bg-[#c0c0c0] text-black"
+      style={{
+        fontFamily: `Tahoma, "MS Sans Serif", "Pixelify Sans", sans-serif`,
+        fontWeight: 700,
+        WebkitFontSmoothing: 'none',
+        textRendering: 'geometricPrecision'
+      }}
+    >
+      <div className="border-b border-black bg-[#efefef] px-3 py-1 text-[11px]">
+        <div
+          className="relative mr-5 inline-block"
+          onMouseEnter={() => setIsGameMenuOpen(true)}
+          onMouseLeave={() => setIsGameMenuOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setIsGameMenuOpen((prev) => !prev)}
+            className={`px-1 ${isGameMenuOpen ? 'bg-[#0000a8] text-white' : ''}`}
+          >
+            <u>G</u>ame
+          </button>
+          {isGameMenuOpen && (
+            <div className="absolute left-0 top-full z-20 mt-[1px] min-w-[128px] win95-bevel bg-[#c0c0c0] p-1 text-left text-black">
+              <button
+                type="button"
+                onClick={restartGame}
+                className="block w-full px-2 py-1 text-left hover:bg-[#0000a8] hover:text-white"
+              >
+                New Game
+              </button>
+              <button
+                type="button"
+                onClick={togglePause}
+                className="block w-full px-2 py-1 text-left hover:bg-[#0000a8] hover:text-white"
+              >
+                {game.isPaused ? 'Resume Game' : 'Pause Game'}
+              </button>
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          className="mr-5 px-1 hover:bg-[#0000a8] hover:text-white"
+        >
+          <u>S</u>kill
+        </button>
+        <button
+          type="button"
+          className="mr-5 px-1 hover:bg-[#0000a8] hover:text-white"
+        >
+          <u>O</u>ptions
+        </button>
+        <button
+          type="button"
+          className="px-1 hover:bg-[#0000a8] hover:text-white"
+        >
+          <u>H</u>elp
+        </button>
+      </div>
+
+      <div
+        className={`relative flex flex-1 gap-5 overflow-auto p-3 ${isCompactLayout ? 'flex-col items-center pb-28' : 'items-start'}`}
+        style={{
+          backgroundColor: '#ff31ff',
+          backgroundImage: 'repeating-conic-gradient(from 45deg, #ff31ff 0deg 90deg, #ff3a10 90deg 180deg, #ff31ff 180deg 270deg, #ff3a10 270deg 360deg), linear-gradient(45deg, transparent 0 48%, white 48% 52%, transparent 52% 100%), linear-gradient(-45deg, transparent 0 48%, white 48% 52%, transparent 52% 100%)',
+          backgroundSize: '46px 46px, 46px 46px, 46px 46px',
+          backgroundPosition: '0 0, 0 0, 0 0'
+        }}
+      >
+        <div className="win95-bevel bg-[#c0c0c0] p-3">
+          <div className={`win95-bevel-inset bg-[#d3d3d3] text-center leading-[1.4] ${isCompactLayout ? 'grid grid-cols-4 items-center gap-3 px-3 py-3 text-[12px] w-full' : 'px-5 py-7 text-[18px]'}`}>
+            <div className={isCompactLayout ? 'mb-0' : 'mb-4'}>
+              <div>Score:</div>
+              <div className="text-[#0000ff]">{game.score}</div>
+            </div>
+            <div className={isCompactLayout ? 'mb-0' : 'mb-4'}>
+              <div>Level:</div>
+              <div className="text-[#0000ff]">{game.level}</div>
+            </div>
+            <div className={isCompactLayout ? 'mb-0' : 'mb-4'}>
+              <div>Lines:</div>
+              <div className="text-[#0000ff]">{game.lines}</div>
+            </div>
+
+            <div className={`${isCompactLayout ? 'mt-0 px-2 py-1' : 'mt-6 px-4 py-2'} border border-[#808080] bg-[#d3d3d3]`}>
+              <div className={isCompactLayout ? 'mb-1' : 'mb-3'}>Next</div>
+              <div className={`mx-auto grid grid-cols-4 grid-rows-4 gap-0.5 bg-black p-1 ${isCompactLayout ? 'h-[56px] w-[56px]' : 'h-[72px] w-[72px]'}`}>
+                {Array.from({ length: 16 }, (_, index) => {
+                  const x = index % 4;
+                  const y = Math.floor(index / 4);
+                  const filled = nextShape.some(([shapeX, shapeY]) => shapeX === x && shapeY === y);
+
+                  return (
+                    <div key={index} className="h-full w-full">
+                      {filled ? <TetrisBlock cell={game.next} /> : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative win95-bevel bg-[#c0c0c0] p-3">
+          <div className="win95-bevel-inset bg-black p-0">
+            <div
+              className="relative bg-black"
+              style={{
+                width: `${TETRIS_COLS * cellSize}px`,
+                height: `${TETRIS_ROWS * cellSize}px`
+              }}
+            >
+              <div
+                className="grid h-full w-full"
+                style={{
+                  gridTemplateColumns: `repeat(${TETRIS_COLS}, ${cellSize}px)`,
+                  gridTemplateRows: `repeat(${TETRIS_ROWS}, ${cellSize}px)`
+                }}
+              >
+                {boardWithPiece.flatMap((row, rowIndex) =>
+                  row.map((cell, colIndex) => (
+                    <div key={`${rowIndex}-${colIndex}`} className="h-full w-full bg-black">
+                      {cell ? <TetrisBlock cell={cell} /> : null}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {game.isPaused && !game.isGameOver && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-[20px] text-white">
+                  Paused
+                </div>
+              )}
+
+              {game.isGameOver && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black">
+                  <div className="w-[305px] border-[4px] border-[#0000a8] bg-[#efefef] shadow-[4px_4px_0_#000]">
+                    <div className="flex items-center justify-between bg-[#0000a8] px-2 py-1 text-[14px] text-white">
+                      <span>TETRIS for Windows</span>
+                      <span className="border border-black bg-[#c0c0c0] px-1 text-black">_</span>
+                    </div>
+                    <div className="px-8 py-7 text-[20px]">Game Over!</div>
+                    <div className="pb-6 text-center">
+                      <button
+                        type="button"
+                        onClick={restartGame}
+                        className="win95-bevel win95-button min-w-[84px] px-4 py-1 text-[20px]"
+                      >
+                        OK
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className={`absolute text-[11px] text-white ${isCompactLayout ? 'bottom-20 left-3 right-3 text-center' : 'bottom-3 left-3 right-3'}`}>
+          <span>Arrows move, Up rotates, Space drops, P pauses.</span>
+        </div>
+
+        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2 sm:hidden">
+          <button
+            type="button"
+            onClick={() => movePiece(-1, 0)}
+            className="win95-bevel win95-button min-w-[52px] bg-[#c0c0c0] px-3 py-2 text-black"
+          >
+            Left
+          </button>
+          <button
+            type="button"
+            onClick={() => rotatePiece()}
+            className="win95-bevel win95-button min-w-[52px] bg-[#c0c0c0] px-3 py-2 text-black"
+          >
+            Turn
+          </button>
+          <button
+            type="button"
+            onClick={() => movePiece(0, 1)}
+            className="win95-bevel win95-button min-w-[52px] bg-[#c0c0c0] px-3 py-2 text-black"
+          >
+            Down
+          </button>
+          <button
+            type="button"
+            onClick={() => movePiece(1, 0)}
+            className="win95-bevel win95-button min-w-[52px] bg-[#c0c0c0] px-3 py-2 text-black"
+          >
+            Right
+          </button>
+          <button
+            type="button"
+            onClick={() => hardDrop()}
+            className="win95-bevel win95-button min-w-[52px] bg-[#c0c0c0] px-3 py-2 text-black"
+          >
+            Drop
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const PaintContent: React.FC = () => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -1377,10 +1991,21 @@ type ClassicFolderItem = {
   name: string;
   kind: 'folder' | 'file';
   url?: string;
+  folderKey?: string;
+  fileIcon?: 'default' | 'bat-exec' | 'wangimg-128';
+  fileType?: 'default' | 'image';
 };
 
 const FileIconSmall: React.FC = () => (
   <Mapi32IconAttach variant="32x32_4" className="w-8 h-8" />
+);
+
+const BatExecIconSmall: React.FC = () => (
+  <BatExec variant="32x32_4" className="w-8 h-8" />
+);
+
+const Wangimg128IconSmall: React.FC = () => (
+  <Wangimg128 variant="32x32_4" className="w-8 h-8" />
 );
 
 const FolderIconSmall: React.FC = () => (
@@ -1388,11 +2013,34 @@ const FolderIconSmall: React.FC = () => (
 );
 
 interface ClassicFolderViewProps {
+  title?: string;
   items: ClassicFolderItem[];
+  canGoBack?: boolean;
+  onGoBack?: () => void;
+  onOpenFolder?: (folderKey: string) => void;
+  onOpenImage?: (title: string, src: string) => void;
 }
 
-const ClassicFolderView: React.FC<ClassicFolderViewProps> = ({ items }) => (
+const ClassicFolderView: React.FC<ClassicFolderViewProps> = ({
+  title = 'Folder',
+  items,
+  canGoBack = false,
+  onGoBack,
+  onOpenFolder,
+  onOpenImage
+}) => (
   <div className="bg-[#c0c0c0] h-full p-1 flex flex-col text-[11px]">
+    <div className="mb-1 flex items-center gap-1">
+      <button
+        type="button"
+        onClick={onGoBack}
+        disabled={!canGoBack}
+        className="win95-bevel win95-button min-w-[52px] px-2 py-0.5 disabled:text-gray-500"
+      >
+        Up
+      </button>
+      <div className="win95-bevel-inset flex-1 bg-white px-2 py-0.5">{title}</div>
+    </div>
     <div className="win95-bevel-inset bg-[#d9d9d9] flex-1 overflow-auto p-3">
       <div className="grid grid-cols-[repeat(auto-fill,minmax(82px,1fr))] gap-y-4 gap-x-2 content-start">
         {items.map((item) => (
@@ -1400,13 +2048,29 @@ const ClassicFolderView: React.FC<ClassicFolderViewProps> = ({ items }) => (
             key={item.name}
             type="button"
             onClick={() => {
+              if (item.kind === 'folder' && item.folderKey && onOpenFolder) {
+                onOpenFolder(item.folderKey);
+                return;
+              }
+
+              if (item.kind === 'file' && item.fileType === 'image' && item.url && onOpenImage) {
+                onOpenImage(item.name, item.url);
+                return;
+              }
+
               if (item.url) {
                 window.open(item.url, '_blank', 'noopener,noreferrer');
               }
             }}
             className="flex flex-col items-center gap-1 px-1 py-1 text-center hover:bg-blue-700 hover:text-white"
           >
-            {item.kind === 'folder' ? <FolderIconSmall /> : <FileIconSmall />}
+            {item.kind === 'folder'
+              ? <FolderIconSmall />
+              : item.fileIcon === 'bat-exec'
+                ? <BatExecIconSmall />
+                : item.fileIcon === 'wangimg-128'
+                  ? <Wangimg128IconSmall />
+                : <FileIconSmall />}
             <span className="leading-tight break-all [text-shadow:none]">{item.name}</span>
           </button>
         ))}
@@ -1420,18 +2084,93 @@ const ClassicFolderView: React.FC<ClassicFolderViewProps> = ({ items }) => (
   </div>
 );
 
-const projectFolderItems: ClassicFolderItem[] = [
-  { name: 'beats', kind: 'folder' },
-  { name: 'games', kind: 'folder' },
-  { name: 'websites', kind: 'folder' },
-  { name: 'Space_Invaders_95.pdf', kind: 'file' },
-  { name: 'VHS_Filter_Tool.pdf', kind: 'file' },
-  { name: 'BeeperJS.pdf', kind: 'file' },
-  { name: 'Portfolio_Redesign.pdf', kind: 'file' },
-  { name: 'Music_Visualizer.pdf', kind: 'file' },
-  { name: 'Pixel_Platformer.pdf', kind: 'file' },
-  { name: 'Synth_UI_Concept.pdf', kind: 'file' }
-];
+type ProjectFolderKey = 'root' | 'games' | 'websites' | 'master-rng' | 'avocado-clicker' | 'platform-bouncer';
+
+const projectFolderItems: Record<ProjectFolderKey, ClassicFolderItem[]> = {
+  root: [
+    { name: 'games', kind: 'folder', folderKey: 'games' },
+    { name: 'websites', kind: 'folder', folderKey: 'websites' }
+  ],
+  games: [
+    { name: 'Master RNG', kind: 'folder', folderKey: 'master-rng' },
+    { name: 'Avocado Clicker', kind: 'folder', folderKey: 'avocado-clicker' },
+    { name: 'Platform Bouncer', kind: 'folder', folderKey: 'platform-bouncer' }
+  ],
+  'master-rng': [
+    {
+      name: 'Master_RNG_Steam.url',
+      kind: 'file',
+      url: 'https://store.steampowered.com/app/3135150/Master_RNG/',
+      fileIcon: 'bat-exec'
+    },
+    {
+      name: 'alnummm.jpg',
+      kind: 'file',
+      url: '/projects/master%20rng/alnummm.jpg',
+      fileIcon: 'wangimg-128',
+      fileType: 'image'
+    },
+    {
+      name: 'library_capsule.jpg',
+      kind: 'file',
+      url: '/projects/master%20rng/library_capsule.jpg',
+      fileIcon: 'wangimg-128',
+      fileType: 'image'
+    },
+    {
+      name: 'library_header.jpg',
+      kind: 'file',
+      url: '/projects/master%20rng/library_header.jpg',
+      fileIcon: 'wangimg-128',
+      fileType: 'image'
+    },
+    {
+      name: 'logo.png',
+      kind: 'file',
+      url: '/projects/master%20rng/logo.png',
+      fileIcon: 'wangimg-128',
+      fileType: 'image'
+    },
+    {
+      name: 'treasIIIIure.png',
+      kind: 'file',
+      url: '/projects/master%20rng/treasIIIIure.png',
+      fileIcon: 'wangimg-128',
+      fileType: 'image'
+    }
+  ],
+  'avocado-clicker': [
+    {
+      name: 'Avocado_Clicker_Itch.io.url',
+      kind: 'file',
+      url: 'https://nvadrien.itch.io/avocado-clicker',
+      fileIcon: 'bat-exec'
+    }
+  ],
+  'platform-bouncer': [
+    {
+      name: 'Platform_Bouncer_Itch.io.url',
+      kind: 'file',
+      url: 'https://nvadrien.itch.io/platform-bouncer',
+      fileIcon: 'bat-exec'
+    }
+  ],
+  websites: [
+    { name: 'VHS_Filter_Tool.pdf', kind: 'file' },
+    { name: 'BeeperJS.pdf', kind: 'file' },
+    { name: 'Portfolio_Redesign.pdf', kind: 'file' },
+    { name: 'Synth_UI_Concept.pdf', kind: 'file' }
+  ]
+};
+
+const projectFolderTitles: Record<ProjectFolderKey, string> = {
+  root: 'My Projects',
+  games: 'My Projects\\games',
+  websites: 'My Projects\\websites',
+  'master-rng': 'My Projects\\games\\Master RNG',
+  'avocado-clicker': 'My Projects\\games\\Avocado Clicker',
+  'platform-bouncer': 'My Projects\\games\\Platform Bouncer'
+};
 
 const certificateFolderItems: ClassicFolderItem[] = [
   {
@@ -1461,9 +2200,28 @@ const certificateFolderItems: ClassicFolderItem[] = [
   }
 ];
 
-const ProjectsContent: React.FC = () => (
-  <ClassicFolderView items={projectFolderItems} />
-);
+const ProjectsContent: React.FC<{ onOpenImage: (title: string, src: string) => void }> = ({ onOpenImage }) => {
+  const [activeFolder, setActiveFolder] = useState<ProjectFolderKey>('root');
+  const parentFolders: Record<ProjectFolderKey, ProjectFolderKey | null> = {
+    root: null,
+    games: 'root',
+    websites: 'root',
+    'master-rng': 'games',
+    'avocado-clicker': 'games',
+    'platform-bouncer': 'games'
+  };
+
+  return (
+    <ClassicFolderView
+      title={projectFolderTitles[activeFolder]}
+      items={projectFolderItems[activeFolder]}
+      canGoBack={activeFolder !== 'root'}
+      onGoBack={() => setActiveFolder(parentFolders[activeFolder] ?? 'root')}
+      onOpenFolder={(folderKey) => setActiveFolder(folderKey as ProjectFolderKey)}
+      onOpenImage={onOpenImage}
+    />
+  );
+};
 
 const CertificatesContent: React.FC = () => (
   <ClassicFolderView items={certificateFolderItems} />

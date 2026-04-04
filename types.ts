@@ -20,6 +20,7 @@ export type DesktopAppId =
   | 'my-computer'
   | 'about'
   | 'projects'
+  | 'image-viewer'
   | 'certificates'
   | 'contact'
   | 'internet-explorer'
@@ -27,4 +28,5 @@ export type DesktopAppId =
   | 'winamp'
   | 'paint'
   | 'solitaire'
-  | 'minesweeper';
+  | 'minesweeper'
+  | 'tetris';
