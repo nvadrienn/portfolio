@@ -83,6 +83,66 @@ const App: React.FC = () => {
       icon: <Regedit204 variant="16x16_4" className="w-4 h-4" />,
       content: <div />
     },
+    'projects-games': {
+      id: 'projects-games',
+      title: 'games',
+      isOpen: false,
+      isMinimized: false,
+      isMaximized: false,
+      zIndex: 1,
+      position: { x: 190, y: 100 },
+      size: { width: 560, height: 420 },
+      icon: <Regedit204 variant="16x16_4" className="w-4 h-4" />,
+      content: <div />
+    },
+    'projects-websites': {
+      id: 'projects-websites',
+      title: 'websites',
+      isOpen: false,
+      isMinimized: false,
+      isMaximized: false,
+      zIndex: 1,
+      position: { x: 210, y: 120 },
+      size: { width: 560, height: 420 },
+      icon: <Regedit204 variant="16x16_4" className="w-4 h-4" />,
+      content: <div />
+    },
+    'projects-master-rng': {
+      id: 'projects-master-rng',
+      title: 'Master RNG',
+      isOpen: false,
+      isMinimized: false,
+      isMaximized: false,
+      zIndex: 1,
+      position: { x: 230, y: 140 },
+      size: { width: 560, height: 420 },
+      icon: <Regedit204 variant="16x16_4" className="w-4 h-4" />,
+      content: <div />
+    },
+    'projects-avocado-clicker': {
+      id: 'projects-avocado-clicker',
+      title: 'Avocado Clicker',
+      isOpen: false,
+      isMinimized: false,
+      isMaximized: false,
+      zIndex: 1,
+      position: { x: 250, y: 160 },
+      size: { width: 560, height: 420 },
+      icon: <Regedit204 variant="16x16_4" className="w-4 h-4" />,
+      content: <div />
+    },
+    'projects-platform-bouncer': {
+      id: 'projects-platform-bouncer',
+      title: 'Platform Bouncer',
+      isOpen: false,
+      isMinimized: false,
+      isMaximized: false,
+      zIndex: 1,
+      position: { x: 270, y: 180 },
+      size: { width: 560, height: 420 },
+      icon: <Regedit204 variant="16x16_4" className="w-4 h-4" />,
+      content: <div />
+    },
     'image-viewer': {
       id: 'image-viewer',
       title: 'Image Viewer',
@@ -484,7 +544,17 @@ const App: React.FC = () => {
                 win.id === 'my-computer'
                   ? <MyComputerContent onOpenPaint={() => { openWindow('paint'); closeWindow('my-computer'); }} onOpenSolitaire={() => { openWindow('solitaire'); closeWindow('my-computer'); }} onOpenMinesweeper={() => { openWindow('minesweeper'); closeWindow('my-computer'); }} onOpenTetris={() => { openWindow('tetris'); closeWindow('my-computer'); }} />
                   : win.id === 'projects'
-                    ? <ProjectsContent onOpenImage={openImageViewer} />
+                    ? <ProjectsContent onOpenFolder={openWindow} />
+                  : win.id === 'projects-games'
+                    ? <ProjectGamesContent onOpenFolder={openWindow} />
+                  : win.id === 'projects-websites'
+                    ? <ProjectWebsitesContent />
+                  : win.id === 'projects-master-rng'
+                    ? <ProjectMasterRngContent onOpenImage={openImageViewer} />
+                  : win.id === 'projects-avocado-clicker'
+                    ? <ProjectAvocadoClickerContent onOpenImage={openImageViewer} />
+                  : win.id === 'projects-platform-bouncer'
+                    ? <ProjectPlatformBouncerContent onOpenImage={openImageViewer} />
                     : win.id === 'image-viewer' && activeImage
                       ? <ImageViewerContent title={activeImage.title} src={activeImage.src} />
                   : win.id === 'trash'
@@ -1990,64 +2060,55 @@ const AboutContent: React.FC = () => (
 type ClassicFolderItem = {
   name: string;
   kind: 'folder' | 'file';
+  bytes?: number;
   url?: string;
   folderKey?: string;
   fileIcon?: 'default' | 'bat-exec' | 'wangimg-128';
   fileType?: 'default' | 'image';
 };
 
+const formatFolderBytes = (bytes: number) => `${bytes.toLocaleString()} bytes`;
+
 const FileIconSmall: React.FC = () => (
-  <Mapi32IconAttach variant="32x32_4" className="w-8 h-8" />
+  <Mapi32IconAttach variant="32x32_4" className="h-12 w-12" />
 );
 
 const BatExecIconSmall: React.FC = () => (
-  <BatExec variant="32x32_4" className="w-8 h-8" />
+  <BatExec variant="32x32_4" className="h-12 w-12" />
 );
 
 const Wangimg128IconSmall: React.FC = () => (
-  <Wangimg128 variant="32x32_4" className="w-8 h-8" />
+  <Wangimg128 variant="32x32_4" className="h-12 w-12" />
 );
 
 const FolderIconSmall: React.FC = () => (
-  <img src="/foldericon.png" alt="" className="w-9 h-8 object-contain" draggable={false} />
+  <img src="/foldericon.png" alt="" className="h-11 w-12 object-contain" draggable={false} />
 );
 
 interface ClassicFolderViewProps {
-  title?: string;
   items: ClassicFolderItem[];
-  canGoBack?: boolean;
-  onGoBack?: () => void;
   onOpenFolder?: (folderKey: string) => void;
   onOpenImage?: (title: string, src: string) => void;
 }
 
 const ClassicFolderView: React.FC<ClassicFolderViewProps> = ({
-  title = 'Folder',
   items,
-  canGoBack = false,
-  onGoBack,
   onOpenFolder,
   onOpenImage
-}) => (
+}) => {
+  const totalBytes = items.reduce((sum, item) => sum + (item.bytes ?? 0), 0);
+
+  return (
   <div className="bg-[#c0c0c0] h-full p-1 flex flex-col text-[11px]">
-    <div className="mb-1 flex items-center gap-1">
-      <button
-        type="button"
-        onClick={onGoBack}
-        disabled={!canGoBack}
-        className="win95-bevel win95-button min-w-[52px] px-2 py-0.5 disabled:text-gray-500"
-      >
-        Up
-      </button>
-      <div className="win95-bevel-inset flex-1 bg-white px-2 py-0.5">{title}</div>
-    </div>
     <div className="win95-bevel-inset bg-[#d9d9d9] flex-1 overflow-auto p-3">
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(82px,1fr))] gap-y-4 gap-x-2 content-start">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-x-3 gap-y-5 content-start">
         {items.map((item) => (
           <button
             key={item.name}
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
+
               if (item.kind === 'folder' && item.folderKey && onOpenFolder) {
                 onOpenFolder(item.folderKey);
                 return;
@@ -2062,7 +2123,8 @@ const ClassicFolderView: React.FC<ClassicFolderViewProps> = ({
                 window.open(item.url, '_blank', 'noopener,noreferrer');
               }
             }}
-            className="flex flex-col items-center gap-1 px-1 py-1 text-center hover:bg-blue-700 hover:text-white"
+            onMouseDown={(e) => e.stopPropagation()}
+            className="flex flex-col items-center gap-2 px-2 py-2 text-center hover:bg-blue-700 hover:text-white"
           >
             {item.kind === 'folder'
               ? <FolderIconSmall />
@@ -2071,72 +2133,78 @@ const ClassicFolderView: React.FC<ClassicFolderViewProps> = ({
                 : item.fileIcon === 'wangimg-128'
                   ? <Wangimg128IconSmall />
                 : <FileIconSmall />}
-            <span className="leading-tight break-all [text-shadow:none]">{item.name}</span>
+            <span className="text-[13px] leading-tight break-all [text-shadow:none]">{item.name}</span>
           </button>
         ))}
       </div>
     </div>
-    <div className="mt-1 grid grid-cols-[1.5fr_1fr_1fr] gap-1">
+    <div className="mt-1 grid grid-cols-[1.5fr_1fr] gap-1">
       <div className="win95-bevel-inset px-2 py-0.5">{items.length} Objects in Folder.</div>
-      <div className="win95-bevel-inset px-2 py-0.5">&nbsp;</div>
-      <div className="win95-bevel-inset px-2 py-0.5">&nbsp;</div>
+      <div className="win95-bevel-inset px-2 py-0.5">{formatFolderBytes(totalBytes)}</div>
     </div>
   </div>
-);
+  );
+};
 
 type ProjectFolderKey = 'root' | 'games' | 'websites' | 'master-rng' | 'avocado-clicker' | 'platform-bouncer';
 
 const projectFolderItems: Record<ProjectFolderKey, ClassicFolderItem[]> = {
   root: [
-    { name: 'games', kind: 'folder', folderKey: 'games' },
-    { name: 'websites', kind: 'folder', folderKey: 'websites' }
+    { name: 'games', kind: 'folder', folderKey: 'games', bytes: 2506075 },
+    { name: 'websites', kind: 'folder', folderKey: 'websites', bytes: 0 }
   ],
   games: [
-    { name: 'Master RNG', kind: 'folder', folderKey: 'master-rng' },
-    { name: 'Avocado Clicker', kind: 'folder', folderKey: 'avocado-clicker' },
-    { name: 'Platform Bouncer', kind: 'folder', folderKey: 'platform-bouncer' }
+    { name: 'Master RNG', kind: 'folder', folderKey: 'master-rng', bytes: 652024 },
+    { name: 'Avocado Clicker', kind: 'folder', folderKey: 'avocado-clicker', bytes: 765716 },
+    { name: 'Platform Bouncer', kind: 'folder', folderKey: 'platform-bouncer', bytes: 1088335 }
   ],
   'master-rng': [
     {
       name: 'Master_RNG_Steam.url',
       kind: 'file',
       url: 'https://store.steampowered.com/app/3135150/Master_RNG/',
-      fileIcon: 'bat-exec'
+      fileIcon: 'bat-exec',
+      bytes: 0
     },
     {
       name: 'alnummm.jpg',
       kind: 'file',
       url: '/projects/master%20rng/alnummm.jpg',
       fileIcon: 'wangimg-128',
-      fileType: 'image'
+      fileType: 'image',
+      bytes: 114752
     },
     {
       name: 'library_capsule.jpg',
       kind: 'file',
       url: '/projects/master%20rng/library_capsule.jpg',
       fileIcon: 'wangimg-128',
-      fileType: 'image'
+      fileType: 'image',
+      bytes: 109634
     },
     {
       name: 'library_header.jpg',
       kind: 'file',
       url: '/projects/master%20rng/library_header.jpg',
       fileIcon: 'wangimg-128',
-      fileType: 'image'
+      fileType: 'image',
+      bytes: 197562
     },
     {
       name: 'logo.png',
       kind: 'file',
       url: '/projects/master%20rng/logo.png',
       fileIcon: 'wangimg-128',
-      fileType: 'image'
+      fileType: 'image',
+      bytes: 218985
     },
     {
       name: 'treasIIIIure.png',
       kind: 'file',
       url: '/projects/master%20rng/treasIIIIure.png',
       fileIcon: 'wangimg-128',
-      fileType: 'image'
+      fileType: 'image',
+      bytes: 11091
     }
   ],
   'avocado-clicker': [
@@ -2144,7 +2212,32 @@ const projectFolderItems: Record<ProjectFolderKey, ClassicFolderItem[]> = {
       name: 'Avocado_Clicker_Itch.io.url',
       kind: 'file',
       url: 'https://nvadrien.itch.io/avocado-clicker',
-      fileIcon: 'bat-exec'
+      fileIcon: 'bat-exec',
+      bytes: 0
+    },
+    {
+      name: 'Screenshot 2024-08-01 224426.png',
+      kind: 'file',
+      url: '/projects/avacado%20clicker/Screenshot%202024-08-01%20224426.png',
+      fileIcon: 'wangimg-128',
+      fileType: 'image',
+      bytes: 196846
+    },
+    {
+      name: 'Screenshot 2024-08-01 224535.png',
+      kind: 'file',
+      url: '/projects/avacado%20clicker/Screenshot%202024-08-01%20224535.png',
+      fileIcon: 'wangimg-128',
+      fileType: 'image',
+      bytes: 260986
+    },
+    {
+      name: 'Screenshot 2024-08-01 225032.png',
+      kind: 'file',
+      url: '/projects/avacado%20clicker/Screenshot%202024-08-01%20225032.png',
+      fileIcon: 'wangimg-128',
+      fileType: 'image',
+      bytes: 307884
     }
   ],
   'platform-bouncer': [
@@ -2152,14 +2245,47 @@ const projectFolderItems: Record<ProjectFolderKey, ClassicFolderItem[]> = {
       name: 'Platform_Bouncer_Itch.io.url',
       kind: 'file',
       url: 'https://nvadrien.itch.io/platform-bouncer',
-      fileIcon: 'bat-exec'
+      fileIcon: 'bat-exec',
+      bytes: 0
+    },
+    {
+      name: 'feature graphic.png',
+      kind: 'file',
+      url: '/projects/platform%20bouncer/feature%20graphic.png',
+      fileIcon: 'wangimg-128',
+      fileType: 'image',
+      bytes: 51756
+    },
+    {
+      name: 'plalala.png',
+      kind: 'file',
+      url: '/projects/platform%20bouncer/plalala.png',
+      fileIcon: 'wangimg-128',
+      fileType: 'image',
+      bytes: 270500
+    },
+    {
+      name: 'popoopopop.png',
+      kind: 'file',
+      url: '/projects/platform%20bouncer/popoopopop.png',
+      fileIcon: 'wangimg-128',
+      fileType: 'image',
+      bytes: 13623
+    },
+    {
+      name: 'Screenshot 2024-05-31 000900.png',
+      kind: 'file',
+      url: '/projects/platform%20bouncer/Screenshot%202024-05-31%20000900.png',
+      fileIcon: 'wangimg-128',
+      fileType: 'image',
+      bytes: 746456
     }
   ],
   websites: [
-    { name: 'VHS_Filter_Tool.pdf', kind: 'file' },
-    { name: 'BeeperJS.pdf', kind: 'file' },
-    { name: 'Portfolio_Redesign.pdf', kind: 'file' },
-    { name: 'Synth_UI_Concept.pdf', kind: 'file' }
+    { name: 'VHS_Filter_Tool.pdf', kind: 'file', bytes: 0 },
+    { name: 'BeeperJS.pdf', kind: 'file', bytes: 0 },
+    { name: 'Portfolio_Redesign.pdf', kind: 'file', bytes: 0 },
+    { name: 'Synth_UI_Concept.pdf', kind: 'file', bytes: 0 }
   ]
 };
 
@@ -2176,52 +2302,73 @@ const certificateFolderItems: ClassicFolderItem[] = [
   {
     name: 'CS50_Certificate.pdf',
     kind: 'file',
-    url: 'https://certificates.cs50.io/d3f0827e-d0aa-40e1-ab3a-2fdb685ab596.pdf?size=letter'
+    url: 'https://certificates.cs50.io/d3f0827e-d0aa-40e1-ab3a-2fdb685ab596.pdf?size=letter',
+    bytes: 0
   },
   {
     name: 'BWSIX_Certificate.pdf',
     kind: 'file',
-    url: 'https://courses.bwsix.edly.io/certificates/9a40e5891ee14b88828405f15e9d1749'
+    url: 'https://courses.bwsix.edly.io/certificates/9a40e5891ee14b88828405f15e9d1749',
+    bytes: 0
   },
   {
     name: 'Certificate Of Participation.pdf',
     kind: 'file',
-    url: '/certificates/Certificate%20Of%20Participation.pdf'
+    url: '/certificates/Certificate%20Of%20Participation.pdf',
+    bytes: 1011695
   },
   {
     name: 'Certificate Of Appreciation.pdf',
     kind: 'file',
-    url: '/certificates/Certificate%20Of%20Appreciation.pdf'
+    url: '/certificates/Certificate%20Of%20Appreciation.pdf',
+    bytes: 1207715
   },
   {
     name: 'Certificate Of Game Development.pdf',
     kind: 'file',
-    url: '/certificates/Certificate%20Of%20Game%20Development.pdf'
+    url: '/certificates/Certificate%20Of%20Game%20Development.pdf',
+    bytes: 408276
   }
 ];
 
-const ProjectsContent: React.FC<{ onOpenImage: (title: string, src: string) => void }> = ({ onOpenImage }) => {
-  const [activeFolder, setActiveFolder] = useState<ProjectFolderKey>('root');
-  const parentFolders: Record<ProjectFolderKey, ProjectFolderKey | null> = {
-    root: null,
-    games: 'root',
-    websites: 'root',
-    'master-rng': 'games',
-    'avocado-clicker': 'games',
-    'platform-bouncer': 'games'
-  };
-
-  return (
-    <ClassicFolderView
-      title={projectFolderTitles[activeFolder]}
-      items={projectFolderItems[activeFolder]}
-      canGoBack={activeFolder !== 'root'}
-      onGoBack={() => setActiveFolder(parentFolders[activeFolder] ?? 'root')}
-      onOpenFolder={(folderKey) => setActiveFolder(folderKey as ProjectFolderKey)}
-      onOpenImage={onOpenImage}
-    />
-  );
+const projectFolderWindowMap: Record<ProjectFolderKey, DesktopAppId> = {
+  root: 'projects',
+  games: 'projects-games',
+  websites: 'projects-websites',
+  'master-rng': 'projects-master-rng',
+  'avocado-clicker': 'projects-avocado-clicker',
+  'platform-bouncer': 'projects-platform-bouncer'
 };
+
+const ProjectsContent: React.FC<{ onOpenFolder: (id: DesktopAppId) => void }> = ({ onOpenFolder }) => (
+  <ClassicFolderView
+    items={projectFolderItems.root}
+    onOpenFolder={(folderKey) => onOpenFolder(projectFolderWindowMap[folderKey as ProjectFolderKey])}
+  />
+);
+
+const ProjectGamesContent: React.FC<{ onOpenFolder: (id: DesktopAppId) => void }> = ({ onOpenFolder }) => (
+  <ClassicFolderView
+    items={projectFolderItems.games}
+    onOpenFolder={(folderKey) => onOpenFolder(projectFolderWindowMap[folderKey as ProjectFolderKey])}
+  />
+);
+
+const ProjectWebsitesContent: React.FC = () => (
+  <ClassicFolderView items={projectFolderItems.websites} />
+);
+
+const ProjectMasterRngContent: React.FC<{ onOpenImage: (title: string, src: string) => void }> = ({ onOpenImage }) => (
+  <ClassicFolderView items={projectFolderItems['master-rng']} onOpenImage={onOpenImage} />
+);
+
+const ProjectAvocadoClickerContent: React.FC<{ onOpenImage: (title: string, src: string) => void }> = ({ onOpenImage }) => (
+  <ClassicFolderView items={projectFolderItems['avocado-clicker']} onOpenImage={onOpenImage} />
+);
+
+const ProjectPlatformBouncerContent: React.FC<{ onOpenImage: (title: string, src: string) => void }> = ({ onOpenImage }) => (
+  <ClassicFolderView items={projectFolderItems['platform-bouncer']} onOpenImage={onOpenImage} />
+);
 
 const CertificatesContent: React.FC = () => (
   <ClassicFolderView items={certificateFolderItems} />
